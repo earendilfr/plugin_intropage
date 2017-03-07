@@ -3,16 +3,12 @@
 function display_informations() {
 	global $config, $colors, $poller_options,$console_access,$allowed_hosts,$sql_where;
 
-	print("DEBUG: intropage");
-	
 	if (!api_user_realm_auth('intropage.php'))	{
 		print "Intropage - permission denied";
 		print "<br/><br/>";
 		return false;
 	}
 
-	error_log("DEBUG: intropage");
-	
 	// Retrieve global configuration options
 	$display_layout = read_config_option("intropage_display_layout");
 	$debug = read_config_option("intropage_debug");
@@ -208,7 +204,6 @@ function display_informations() {
 		foreach($values as $id => $val) {
 			if (!isset($val['pie'])) continue;
 			elseif (!array_sum($val['pie']['data'])) continue;
-			error_log("DEBUG:intropage:val:".print_r($val,true));
 			if ($count % 2 == 0) print "</tr><tr>\n";
 			print "<td><br/><div style=\"width: 400px; height: 400px;\">\n";
 			print "<div><canvas id=\"pie_$id\"></canvas>\n";

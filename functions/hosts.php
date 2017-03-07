@@ -7,8 +7,6 @@ function get_hosts() {
 		'name' => 'Hosts',
 		'alarm' => "green",
 	);
-
-	error_log("DEBUG:intropage:allowed_hosts:$allowed_hosts");
 	
 	$h_all  = db_fetch_cell ("SELECT count(id) FROM host WHERE id IN ($allowed_hosts)");
 	$h_up   = db_fetch_cell ("SELECT count(id) FROM host WHERE id IN ($allowed_hosts) AND status='3' AND disabled=''");
@@ -18,8 +16,6 @@ function get_hosts() {
 	
 	if ($h_down > 0) { $result['alarm'] = "red"; }
 	elseif ($h_disa > 0) { $result['alarm'] = "yellow"; }
-
-	error_log("DEBUG:intropage:allowed_hosts=$allowed_hosts,console_access=$console_access");
 	
 	if ($console_access) {
 		$result['data'] = "<a href=\"" . htmlspecialchars($config['url_path']) . "host.php?host_status=-1\">All: $h_all</a> | \n";
