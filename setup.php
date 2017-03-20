@@ -9,6 +9,9 @@ function plugin_intropage_install() {
 	api_plugin_register_hook('intropage', 'top_graph_header_tabs', 'intropage_show_tab', 'include/tab.php');
 	
 	api_plugin_register_hook('intropage', 'console_after', 'intropage_console_after', 'include/settings.php');
+
+	api_plugin_register_hook('intropage', 'user_admin_setup_sql_save', 'intropage_user_admin_setup_sql_save', 'include/settings.php');
+
 	api_plugin_register_realm('intropage', 'intropage.php', 'Plugin Intropage - view', 1);
 	
 	intropage_setup_database();
@@ -54,7 +57,7 @@ function intropage_check_upgrade() {
 
 function intropage_setup_database() {
 	global $config, $intropage_settings;
-	api_plugin_db_add_column ('user_auth',array('name' => 'intropage_opts', 'type' => 'tinyint(1)', 'NULL' => false, 'default' => '0'));
+	api_plugin_db_add_column ('intropage', 'user_auth',array('name' => 'intropage_opts', 'type' => 'tinyint(1)', 'NULL' => false, 'default' => '0'));
 	
 	include_once($config['base_path'] . '/plugins/intropage/include/variables.php');
 	$sql_insert = '';

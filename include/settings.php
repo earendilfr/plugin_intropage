@@ -63,4 +63,12 @@ function intropage_console_after() {
 	}
 }
 
+function intropage_user_admin_setup_sql_save($save) {
+	global $settings_user;
+
+	$save['intropage_opts'] = form_input_validate(get_nfilter_request_var('intropage_opts'), 'intropage_opts', '^[01]$', true, 3);
+
+	return $save;
+}
+
 ?>
