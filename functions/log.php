@@ -43,45 +43,42 @@ function tail_log($log_file, $nbr_lines = 1000, $adaptive = true) {
 	return explode("\n",$output);
 }
 
-if (read_config_option('intropage_log_analyze_enable')) {
-	$log_file = read_config_option("path_cactilog");
-	$nbr_lines = read_config_option("intropage_log_analyze_rows");
-	$log_lines = tail_log($log_file,$nbr_lines);
-	$size = filesize($log_file);
-} else {
-	$nbr_lines = 0;
-	$log_lines = false;
-	$size = false;
+function human_filesize($bytes, $decimals = 2) {
+	$size = array('B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
+	$factor = floor((strlen($bytes) - 1) / 3);
+	return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . @$size[$factor];
 }
 
 function get_log_size() {
-	global $config, $log_file, $size;
+	global $config, $log;
 	
 	$result = array(
 		'name' => 'Log size',
 		'alarm' => 'green',
 	);
 
+	error_log("DEBUG: ".print_r($log,true));
+
 	$result['data'] = "<a href=\"" . htmlspecialchars($config['url_path']) . "utilities.php?action=view_logfile\">";
 	
-	if (!$size) {
+	if (!$log['size']) {
 		$result['alarm'] = "red";
 		$result['data'] .= "Log file not accessible</a>";
-	} elseif ($size < 0) {
+	} elseif ($log['size'] < 0) {
 		$result['alarm'] = "red";
 		$result['data'] .= "Log file is larger than 2GB</a>";
-	} elseif ($size < 255999999) {
-		$result['data'] .= humanFileSize($size) . "</a>";
+	} elseif ($log['size'] < 255999999) {
+		$result['data'] .= human_filesize($log['size']) . "</a>";
 	} else {
 		$result['alarm'] = "yellow";
-		$result['data'] .= humanFileSize($size) . " (Logfile is quite large)</a>";
+		$result['data'] .= human_filesize($log['size']) . " (Logfile is quite large)</a>";
 	}
 	
 	return $result;
 }
 
 function get_poller_stats() {
-	global $config, $log_file, $size, $log_lines;
+	global $config, $log;
 	
 	$poller_interval = read_config_option("poller_interval");
 	$result = array(
@@ -119,8 +116,8 @@ function get_poller_stats() {
 			$result['alarm'] = "red";
 			$result['data'] = ($pollers_access)?"<a href=\"".htmlspecialchars($config['url_path'])."pollers.php\">No poller servers is active</a>":"No poller servers is active";
 		}
-	} elseif ($log_lines && $size) {
-		$stats_lines = preg_grep('/STATS/',$log_lines);
+	} elseif ($log['size'] && isset($log['lines'])) {
+		$stats_lines = preg_grep('/STATS/',$log['lines']);
 		if ($stats_lines) {
 			$result['detail'] = '';
 			$max_time = 0;
@@ -157,20 +154,20 @@ function get_poller_stats() {
 }
 
 function get_log_msg() {
-	global $config, $log_lines, $nbr_lines, $size;
+	global $config, $log;
 	
 	$result = array(
-		'name' => "Warning and error (in last $nbr_lines lines)",
+		'name' => "Warning and error (in last ".$log['nbr_lines']." lines)",
 		'alarm' => 'green',
 	);
 	
-	if (!$size) {
+	if (!$log['size'] || !isset($log['lines'])) {
 		$result['alarm'] = "red";
 		$result['data'] = "Log file not accessible";
 	} else {
 		$result['detail'] = '';
 		$error = 0;
-		foreach($log_lines as $line) {
+		foreach($log['lines'] as $line) {
 			if (preg_match('/(WARN|ERROR|FATAL)/',$line,$matches)) {
 				$result['detail'] .= "$line<br/>";
 				if (strcmp($matches[1],"WARN") && $error < 1) {
@@ -190,9 +187,24 @@ function get_log_msg() {
 }
 
 function get_log() {
-	global $config;
+	global $config, $log;
 	
 	$result = array();
+
+	if (read_config_option('intropage_log_analyze_enable')) {
+		$log = array(
+			'file' => read_config_option("path_cactilog"),
+			'nbr_lines' => read_config_option("intropage_log_analyze_rows"),
+		);
+		$log['size'] = filesize($log['file']);
+		$log['lines'] = tail_log($log['file'],$log['nbr_lines']);
+	} else {
+		$log = array(
+			'size' => false,
+			'file' => read_config_option("path_cactilog"),
+			'nbr_lines' => 0,
+		);
+	}
 	
 	$result['log_size'] = get_log_size();
 	$result['poller'] = get_poller_stats();

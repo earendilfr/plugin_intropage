@@ -130,7 +130,7 @@ function display_informations() {
 			printf("<td style=\"vertical-align: top;\"><strong>%s</strong></td>\n",$val['name']);
 			printf("<td>%s",$val['data']);
 			if (isset($val['detail']) && !(is_null($val['detail']) || $val['detail'] == '')) {
-				printf("<span style='float: right'><a href='#' onclick=\"hide_display(\"block_%s\");\">View/hide details</a></span></td></tr>\n",$id);
+				printf("<span style='float: right'><a href='#' onclick=\"hide_display('block_%s');\">View/hide details</a></span></td></tr>\n",$id);
 				form_alternate_row($count,true);
 				print("<td colspan='3'>\n");
 				printf("<div id=\"block_%s\" style=\"display: none\">",$id);
@@ -265,6 +265,21 @@ EOF;
 		else { print PHP_OS; }
 		print "<br/>";
 	}
+	
+	print <<<EOF
+<script type="text/javascript">
+function hide_display (id)      {
+    var temp = document.getElementById(id);
+
+    if (temp.style.display=='block')
+        temp.style.display='none';
+    else
+        temp.style.display='block';
+    return false;
+}
+</script>
+
+EOF;
 	
 	return true;
 }
