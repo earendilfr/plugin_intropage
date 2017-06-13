@@ -57,8 +57,6 @@ function get_log_size() {
 		'alarm' => 'green',
 	);
 
-	error_log("DEBUG: ".print_r($log,true));
-
 	$result['data'] = "<a href=\"" . htmlspecialchars($config['url_path']) . "utilities.php?action=view_logfile\">";
 	
 	if (!$log['size']) {
