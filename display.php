@@ -128,7 +128,7 @@ function display_informations() {
 			form_alternate_row($count,true);
 			printf("<td><img src=\"%splugins/intropage/images/alert_%s.png\" /></td>\n",htmlspecialchars($config['url_path']),$val['alarm']);
 			printf("<td style=\"vertical-align: top;\"><strong>%s</strong></td>\n",$val['name']);
-			printf("<td>%s",$val['data']);
+			printf("<td>%s",(isset($val['data']) && !is_null($val['data'])) ? $val['data'] : '');
 			if (isset($val['detail']) && !(is_null($val['detail']) || $val['detail'] == '')) {
 				printf("<span style='float: right'><a href='#' onclick=\"hide_display('block_%s');\">View/hide details</a></span></td></tr>\n",$id);
 				form_alternate_row($count,true);
