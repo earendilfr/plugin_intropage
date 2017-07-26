@@ -19,7 +19,7 @@ function get_login() {
 		}
 	}
 	
-	$loggin_access = (db_fetch_assoc("select realm_id from user_auth_realm where user_id='" . $_SESSION["sess_user_id"] . "' and user_auth_realm.realm_id=19"))?true:false;
+	$loggin_access = (db_fetch_assoc_prepared("select realm_id from user_auth_realm where user_id= ? and user_auth_realm.realm_id=19",array($_SESSION["sess_user_id"])))?true:false;
 	if ($result['detail'] && $loggin_access)	    
 		$result['detail'] .= "<a href=\"" . htmlspecialchars($config['url_path']) . "utilities.php?action=view_user_log\">Full log</a><br/>\n";
 	

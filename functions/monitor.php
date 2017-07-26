@@ -1,7 +1,7 @@
 <?php
 
 function get_hosts_monitor() {
-	global $config, $allowed_hosts;
+	global $config, $allowed_hosts, $sql_allowed_hosts;
 	
 	$result = array(
 		'name' => 'Not monitored hosts',
@@ -13,7 +13,7 @@ function get_hosts_monitor() {
 		$result['alarm'] = "grey";
 		$result['data'] = "Monitor plugin not installed/running";
 	} else {
-		$sql_monitor = db_fetch_assoc("SELECT description, id FROM host WHERE id in ($allowed_hosts) and monitor != 'on'");
+		$sql_monitor = db_fetch_assoc_prepared("SELECT description, id FROM host WHERE id in ($sql_allowed_hosts) and monitor != 'on'",$allowed_hosts);
 		$result['data'] = count($sql_monitor);
 		if ($sql_monitor) {
 			$result['alarm'] = "red";

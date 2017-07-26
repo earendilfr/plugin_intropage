@@ -84,7 +84,7 @@ function get_poller_stats() {
 		'alarm' => 'green',
 	);
 	
-	$pollers_access = (db_fetch_assoc("select realm_id from user_auth_realm where user_id='" . $_SESSION["sess_user_id"] . "' and user_auth_realm.realm_id=3"))?true:false;
+	$pollers_access = (db_fetch_assoc_prepared("select realm_id from user_auth_realm where user_id= ? and user_auth_realm.realm_id=3",array($_SESSION["sess_user_id"])))?true:false;
 	
 	// Check the poller duration through the pollers table
 	if (db_table_exists("poller",false)) {

@@ -62,7 +62,7 @@ function intropage_setup_database() {
 	include_once($config['base_path'] . '/plugins/intropage/include/variables.php');
 	$sql_insert = '';
 	foreach ($intropage_settings as $key=>$value)   {
-		if (isset($value['default']) && !db_fetch_cell("SELECT value FROM settings WHERE name='$key'")) {
+		if (isset($value['default']) && !db_fetch_cell_prepared('SELECT value FROM settings WHERE name= ?',array($key))) {
 			if ($sql_insert != '') $sql_insert .= ",";
 			$sql_insert .= sprintf("(%s,%s)",db_qstr($key),db_qstr($value['default']));
 		}

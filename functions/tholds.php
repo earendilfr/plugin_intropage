@@ -11,7 +11,7 @@ function get_tholds() {
 	if (!db_fetch_cell("SELECT directory FROM plugin_config where directory='thold' and status=1")) {
 		$result['alarm'] = "grey";
 		$result['data'] = "Thold plugin not installed/running\n";
-	} elseif (!db_fetch_cell("SELECT DISTINCT user_id FROM user_auth_realm WHERE user_id = ".$_SESSION["sess_user_id"]." AND realm_id IN (SELECT id + 100 FROM plugin_realms WHERE file LIKE '%thold%')")) {
+	} elseif (!db_fetch_cell_prepared("SELECT DISTINCT user_id FROM user_auth_realm WHERE user_id = ? AND realm_id IN (SELECT id + 100 FROM plugin_realms WHERE file LIKE '%thold%')",array($_SESSION["sess_user_id"]))) {
 		$result['data'] = "You don't have permission\n";
 	} else {
 		$sql_join = "LEFT JOIN user_auth_perms ON ((thold_data.graph_template_id=user_auth_perms.item_id AND user_auth_perms.type=1 AND user_auth_perms.user_id= " . $_SESSION["sess_user_id"] . ") OR
@@ -26,7 +26,7 @@ function get_tholds() {
 		if ($t_brea > 0 || $t_trig > 0) { $result['alarm'] = "red"; }
 		elseif ($t_disa > 0) { $result['alarm'] = "yellow"; }
 		
-		if (db_fetch_cell("SELECT COUNT(*) FROM user_auth_realm WHERE user_id = ".$_SESSION["sess_user_id"]." AND realm_id IN (SELECT id + 100 FROM plugin_realms WHERE file LIKE '%thold_graph.php%')")) {
+		if (db_fetch_cell_prepared("SELECT COUNT(*) FROM user_auth_realm WHERE user_id = ? AND realm_id IN (SELECT id + 100 FROM plugin_realms WHERE file LIKE '%thold_graph.php%')",array($_SESSION["sess_user_id"]))) {
 			$result['data'] = "<a href=\"" . htmlspecialchars($config['url_path']) . "plugins/thold/thold_graph.php?tab=thold&amp;triggered=-1\">All: $t_all</a> | \n";
 			$result['data'] .= "<a href=\"" . htmlspecialchars($config['url_path']) . "plugins/thold/thold_graph.php?tab=thold&amp;triggered=1\">Breached: $t_brea</a> | \n";
 			$result['data'] .= "<a href=\"" . htmlspecialchars($config['url_path']) . "plugins/thold/thold_graph.php?tab=thold&amp;triggered=3\">Trigged: $t_trig</a> | \n";

@@ -1,18 +1,18 @@
 <?php
 
 function get_hosts() {
-	global $config, $allowed_hosts, $console_access, $sql_where;
+	global $config, $allowed_hosts, $sql_allowed_hosts, $console_access, $sql_where;
 	
 	$result = array(
 		'name' => 'Hosts',
 		'alarm' => "green",
 	);
 	
-	$h_all  = db_fetch_cell ("SELECT count(id) FROM host WHERE id IN ($allowed_hosts)");
-	$h_up   = db_fetch_cell ("SELECT count(id) FROM host WHERE id IN ($allowed_hosts) AND status='3' AND disabled=''");
-	$h_down = db_fetch_cell ("SELECT count(id) FROM host WHERE id IN ($allowed_hosts) AND status='1' AND disabled=''");
-	$h_reco = db_fetch_cell ("SELECT count(id) FROM host WHERE id IN ($allowed_hosts) AND status='2' AND disabled=''");
-	$h_disa = db_fetch_cell ("SELECT count(id) FROM host WHERE id IN ($allowed_hosts) AND disabled='on'");
+	$h_all  = db_fetch_cell_prepared("SELECT count(id) FROM host WHERE id IN ($sql_allowed_hosts)",$allowed_hosts);
+	$h_up   = db_fetch_cell_prepared("SELECT count(id) FROM host WHERE id IN ($sql_allowed_hosts) AND status='3' AND disabled=''",$allowed_hosts);
+	$h_down = db_fetch_cell_prepared("SELECT count(id) FROM host WHERE id IN ($sql_allowed_hosts) AND status='1' AND disabled=''",$allowed_hosts);
+	$h_reco = db_fetch_cell_prepared("SELECT count(id) FROM host WHERE id IN ($sql_allowed_hosts) AND status='2' AND disabled=''",$allowed_hosts);
+	$h_disa = db_fetch_cell_prepared("SELECT count(id) FROM host WHERE id IN ($sql_allowed_hosts) AND disabled='on'",$allowed_hosts);
 	
 	if ($h_down > 0) { $result['alarm'] = "red"; }
 	elseif ($h_disa > 0) { $result['alarm'] = "yellow"; }
@@ -38,7 +38,7 @@ function get_hosts() {
 }
 
 function get_hosts_same_description() {
-	global $config, $allowed_hosts;
+	global $config, $allowed_hosts, $sql_allowed_hosts;
 	
 	$result = array(
 		'name' => 'Devices with the same description',
@@ -46,7 +46,7 @@ function get_hosts_same_description() {
 		'detail' => '',
 	);
 	
-	$sql_duplicate = db_fetch_assoc("SELECT id,description, count(*) AS count FROM host WHERE id IN ($allowed_hosts) GROUP BY description HAVING count(*)>1");
+	$sql_duplicate = db_fetch_assoc_prepared("SELECT id,description, count(*) AS count FROM host WHERE id IN ($sql_allowed_hosts) GROUP BY description HAVING count(*)>1",$allowed_hosts);
 	$result['data'] = count($sql_duplicate);
 	if (count($sql_duplicate)) {
 		$result['alarm'] = "red";
@@ -62,7 +62,7 @@ function get_hosts_same_description() {
 }
 
 function get_hosts_tree() {
-	global $config, $allowed_hosts;
+	global $config, $allowed_hosts, $sql_allowed_hosts;
 	
 	$result = array(
 		'name' => 'Devices in more then one tree',
@@ -70,7 +70,7 @@ function get_hosts_tree() {
 		'detail' => '',
 	);
 	
-	$sql_multiple = db_fetch_assoc ("SELECT host.id, host.description, count(*) AS count FROM host INNER JOIN graph_tree_items ON (host.id = graph_tree_items.host_id) GROUP BY description HAVING count(*)>1");
+	$sql_multiple = db_fetch_assoc_prepared("SELECT host.id, host.description, count(*) AS count FROM host INNER JOIN graph_tree_items ON (host.id = graph_tree_items.host_id) WHERE host.id IN ($sql_allowed_hosts) GROUP BY description HAVING count(*)>1",$allowed_hosts);
 	$result['data'] = count($sql_multiple);
 	if (count($sql_multiple)) {
 		$result['alarm'] = "red";
@@ -80,7 +80,7 @@ function get_hosts_tree() {
 				$parent = $host['parent'];
 				$tree = $host['name'] . " / ";
 				while ($parent != 0) {
-					$sql_parent = db_fetch_row("SELECT parent, title FROM graph_tree_items WHERE id = $parent");
+					$sql_parent = db_fetch_row_prepared("SELECT parent, title FROM graph_tree_items WHERE id = ?",array($parent));
 					$parent = $sql_parent['parent'];
 					$tree .= $sql_parent['title'] . " / ";
 				}
@@ -93,7 +93,7 @@ function get_hosts_tree() {
 }
 
 function get_hosts_no_graph() {
-	global $config, $allowed_hosts;
+	global $config, $allowed_hosts, $sql_allowed_hosts;
 	
 	$result = array(
 		'name' => 'Hosts without graphs',
@@ -101,7 +101,7 @@ function get_hosts_no_graph() {
 		'detail' => '',
 	);
 	
-	$sql_no_graphs = db_fetch_assoc("SELECT id , description FROM host WHERE id IN ($allowed_hosts) AND id NOT IN (SELECT DISTINCT host_id FROM graph_local) AND snmp_version != 0");
+	$sql_no_graphs = db_fetch_assoc_prepared("SELECT id , description FROM host WHERE id IN ($sql_allowed_hosts) AND id NOT IN (SELECT DISTINCT host_id FROM graph_local) AND snmp_version != 0",$allowed_hosts);
 	$result['data'] = count($sql_no_graphs);
 	if ($sql_no_graphs) {
 		$result['alarm'] = "red";
@@ -113,7 +113,7 @@ function get_hosts_no_graph() {
 }
 
 function get_hosts_no_tree() {
-	global $config, $allowed_hosts;
+	global $config, $allowed_hosts, $sql_allowed_hosts;
 	
 	$result = array(
 		'name' => 'Hosts without tree',
@@ -121,7 +121,7 @@ function get_hosts_no_tree() {
 		'detail' => '',
 	);
 	
-	$sql_no_graphs = db_fetch_assoc("SELECT id , description FROM host WHERE id IN ($allowed_hosts) AND id NOT IN (SELECT DISTINCT host_id FROM graph_tree_items)");
+	$sql_no_graphs = db_fetch_assoc_prepared("SELECT id , description FROM host WHERE id IN ($sql_allowed_hosts) AND id NOT IN (SELECT DISTINCT host_id FROM graph_tree_items)",$allowed_hosts);
 		$result['data'] = count($sql_no_graphs);
 	if ($sql_no_graphs) {
 		$result['alarm'] = "red";
@@ -156,7 +156,7 @@ function get_datasources() {
 }
 
 function get_hosttemplates() {
-	global $config, $allowed_hosts;
+	global $config, $allowed_hosts, $sql_allowed_hosts;
 	
 	$result = array(
 		'pie' => array(
@@ -166,7 +166,7 @@ function get_hosttemplates() {
 		),
 	);
 	
-	$sql_ht = db_fetch_assoc("SELECT host_template.id as id, name, count(host.host_template_id) AS total FROM host_template LEFT JOIN host ON (host_template.id = host.host_template_id) AND host.id IN ($allowed_hosts) GROUP by host_template_id ORDER BY total desc LIMIT 6");
+	$sql_ht = db_fetch_assoc_prepared("SELECT host_template.id as id, name, count(host.host_template_id) AS total FROM host_template LEFT JOIN host ON (host_template.id = host.host_template_id) AND host.id IN ($sql_allowed_hosts) GROUP by host_template_id ORDER BY total desc LIMIT 6",$allowed_hosts);
 	if ($sql_ht) {
 		foreach ($sql_ht as $item) {
 			array_push($result['pie']['label'],$item['name']);

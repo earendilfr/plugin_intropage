@@ -1,7 +1,7 @@
 <?php
 
 function display_informations() {
-	global $config, $colors, $poller_options,$console_access,$allowed_hosts,$sql_where;
+	global $config, $colors, $poller_options, $console_access, $allowed_hosts, $sql_allowed_hosts, $sql_where;
 
 	if (!api_user_realm_auth('intropage.php'))	{
 		print "Intropage - permission denied";
@@ -12,25 +12,25 @@ function display_informations() {
 	// Retrieve global configuration options
 	$display_layout = read_config_option("intropage_display_layout");
 	$debug = read_config_option("intropage_debug");
-	$current_user = db_fetch_row('SELECT * FROM user_auth WHERE id=' . $_SESSION['sess_user_id']);
+	$current_user = db_fetch_row_prepared('SELECT * FROM user_auth WHERE id= ?',array($_SESSION['sess_user_id']));
 	$sql_where = get_graph_permissions_sql($current_user['policy_graphs'], $current_user['policy_hosts'], $current_user['policy_graph_templates']);
-	$allowed_hosts = '';
+	$allowed_hosts = array();
+	$sql_allowed_hosts = '';
     $sql = "SELECT distinct host.id as id FROM host
-        LEFT JOIN graph_local ON (host.id = graph_local.host_id)
-        LEFT JOIN graph_templates_graph ON (graph_templates_graph.local_graph_id = graph_local.id)
-        LEFT JOIN user_auth_perms ON ((graph_templates_graph.local_graph_id=user_auth_perms.item_id AND user_auth_perms.type=1 AND user_auth_perms.user_id= " . $_SESSION["sess_user_id"] . ") OR
-            (host.id=user_auth_perms.item_id AND user_auth_perms.type=3 AND user_auth_perms.user_id=" . $_SESSION["sess_user_id"] . ") OR
-            (graph_templates_graph.id=user_auth_perms.item_id AND user_auth_perms.type=4 AND user_auth_perms.user_id=" . $_SESSION["sess_user_id"] . "))
-        WHERE graph_templates_graph.local_graph_id=graph_local.id and  $sql_where";
-    $sql_result = db_fetch_assoc ($sql);
+		LEFT JOIN graph_local ON (host.id = graph_local.host_id)
+		LEFT JOIN graph_templates_graph ON (graph_templates_graph.local_graph_id = graph_local.id)
+		LEFT JOIN user_auth_perms ON ((graph_templates_graph.local_graph_id=user_auth_perms.item_id AND user_auth_perms.type=1 AND user_auth_perms.user_id= ?) OR
+			(host.id=user_auth_perms.item_id AND user_auth_perms.type=3 AND user_auth_perms.user_id= ?) OR
+			(graph_templates_graph.id=user_auth_perms.item_id AND user_auth_perms.type=4 AND user_auth_perms.user_id= ?))
+		WHERE graph_templates_graph.local_graph_id=graph_local.id and  $sql_where";
+    $sql_result = db_fetch_assoc_prepared($sql,array($_SESSION['sess_user_id'],$_SESSION['sess_user_id'],$_SESSION['sess_user_id']));
     if ($sql_result) {
-        $sql_array_result = array();
-        foreach ($sql_result as $item) { array_push($sql_array_result,$item['id']); }
-        $allowed_hosts = sprintf("%s",implode(",",$sql_array_result));
+        foreach ($sql_result as $item) { array_push($allowed_hosts,$item['id']); }
+		$sql_allowed_hosts = implode(',',array_fill(0,sizeof($allowed_hosts),'?'));
     }
 	
 	// Retrieve access
-	$console_access = (db_fetch_assoc("select realm_id from user_auth_realm where user_id='" . $_SESSION["sess_user_id"] . "' and user_auth_realm.realm_id=8"))?true:false;
+	$console_access = (db_fetch_assoc_prepared("select realm_id from user_auth_realm where user_id= ? and user_auth_realm.realm_id=8",array($_SESSION["sess_user_id"])))?true:false;
 	
 	// Start
 	$values = array();
@@ -156,7 +156,8 @@ function display_informations() {
 		// --- Top 5 host with bad ping
 		html_start_box("<strong>Top 5 hosts with the worst ping response</strong>", "315", '', "3", 'left', '');
 		html_header(array(__('Host'),__('avg'),__('cur')));
-		$sql_worst_host = db_fetch_assoc("SELECT description, id , avg_time, cur_time FROM host where host.id in ($allowed_hosts) order by avg_time desc limit 5");
+		$sql = "SELECT description, id , avg_time, cur_time FROM host WHERE host.id IN ($sql_allowed_hosts).") ORDER BY avg_time DESC LIMIT 5";
+		$sql_worst_host = db_fetch_assoc_prepared($sql,$allowed_hosts);
 		foreach($sql_worst_host as $host) {
 			form_alternate_row($count,true);
 			if ($console_access) { print "<td style=\"padding-right: 2em;\"><a href=\"".htmlspecialchars($config['url_path'])."host.php?action=edit&amp;id=".$host['id']."\">".$host['description']."</a></td>\n"; }
@@ -178,7 +179,8 @@ function display_informations() {
 		html_start_box("<strong>Top 5 hosts with the lowest availability</strong>", "315", '', "3", 'left', '');
 		html_header(array(__('Host'),__('Availability')));
 		
-		$sql_lowest_host = db_fetch_assoc("SELECT description, id, availability FROM host where  host.id in ($allowed_hosts) order by availability  limit 5");
+		$sql = "SELECT description, id, availability FROM host WHERE host.id IN ($sql_allowed_hosts) ORDER BY availability DESC LIMIT 5";
+		$sql_lowest_host = db_fetch_assoc_prepared($sql,$allowed_hosts);
 		foreach($sql_lowest_host as $host) {
 			form_alternate_row($count,true);
 			if ($console_access) { printf("<td style=\"padding-right: 2em;\"><a href=\"%shost.php?action=edit&amp;id=%d\">%s</a></td>\n",htmlspecialchars($config['url_path']),$host['id'],$host['description']); }

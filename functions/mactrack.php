@@ -8,12 +8,12 @@ function get_mactrack() {
 		'alarm' => 'green',
 	);
 	
-	$console_access = db_fetch_assoc("select realm_id from user_auth_realm where user_id='" . $_SESSION["sess_user_id"] . "' and user_auth_realm.realm_id=8") ? true : false;
+	$console_access = db_fetch_assoc_prepared("select realm_id from user_auth_realm where user_id= ? and user_auth_realm.realm_id=8",array($_SESSION["sess_user_id"])) ? true : false;
 	
 	if (!db_fetch_cell("SELECT directory FROM plugin_config where directory='mactrack' and status=1")) {
 		$result['alarm'] = "grey";
 		$result['data'] = "Mactrack plugin not installed/running\n";
-	} elseif (!db_fetch_cell("SELECT DISTINCT user_id FROM user_auth_realm WHERE user_id = ".$_SESSION["sess_user_id"]." AND realm_id =2120")) {
+	} elseif (!db_fetch_cell_prepared("SELECT DISTINCT user_id FROM user_auth_realm WHERE user_id = ? AND realm_id =2120",array($_SESSION["sess_user_id"]))) {
 		$result['data'] =  "You don't have permission\n";
 	} else {
 		$sql_no_mt = db_fetch_assoc("SELECT id, description, hostname FROM host WHERE id NOT IN (SELECT DISTINCT host_id FROM mac_track_devices) AND snmp_version != 0");
@@ -35,7 +35,7 @@ function get_mactrack() {
 		if ($m_down > 0 || $m_err > 0 || $m_unkn > 0) { $result['alarm'] = "red"; }
 		elseif ($m_disa > 0) { $result['alarm'] = "yellow"; }
 		
-		if (db_fetch_cell("SELECT COUNT(*) FROM user_auth_realm WHERE user_id = ".$_SESSION["sess_user_id"]." AND realm_id IN (SELECT id + 100 FROM plugin_realms WHERE file LIKE '%thold_graph.php%')")) {
+		if (db_fetch_cell_prepared("SELECT COUNT(*) FROM user_auth_realm WHERE user_id = ? AND realm_id IN (SELECT id + 100 FROM plugin_realms WHERE file LIKE '%thold_graph.php%')",array($_SESSION["sess_user_id"]))) {
 			$result['data']  = "<a href=\"" . htmlspecialchars($config['url_path']) . "plugins/mactrack/mactrack_devices.php?site_id=-1&amp;status=-1&amp;type_id=-1&amp;device_type_id=-1&amp;filter=&amp;rows=-1\">All: $m_all</a> | \n";
 			$result['data'] .= "<a href=\"" . htmlspecialchars($config['url_path']) . 	"plugins/mactrack/mactrack_devices.php?site_id=-1&amp;status=3&amp;type_id=-1&amp;device_type_id=-1&amp;filter=&amp;rows=-1\">Up: $m_up</a> | \n";
 			$result['data'] .= "<a href=\"" . htmlspecialchars($config['url_path']) . "plugins/mactrack/mactrack_devices.php?site_id=-1&amp;status=1&amp;type_id=-1&amp;device_type_id=-1&amp;filter=&amp;rows=-1\">Down: $m_down</a> | \n";
