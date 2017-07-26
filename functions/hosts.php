@@ -51,7 +51,7 @@ function get_hosts_same_description() {
 	if (count($sql_duplicate)) {
 		$result['alarm'] = "red";
 		foreach($sql_duplicate as $row) {
-			$sql_hosts = db_fetch_assoc("SELECT id,description FROM host WHERE id IN ($allowed_hosts) AND description = ?",array($host['description']));
+			$sql_hosts = db_fetch_assoc_prepared("SELECT id,description FROM host WHERE id IN ($allowed_hosts) AND description = ?",array($host['description']));
 			foreach ($sql_hosts as $item) {
 				$result['detail'] .= sprintf("<a href=\"%shost.php?action=edit&amp;id=%d\">%s</a>(ID %s)<br/>\n",htmlspecialchars($config['url_path']),$item['id'],$item['description'],$item['id']);
 			}
