@@ -156,7 +156,7 @@ function display_informations() {
 		// --- Top 5 host with bad ping
 		html_start_box("<strong>Top 5 hosts with the worst ping response</strong>", "315", '', "3", 'left', '');
 		html_header(array(__('Host'),__('avg'),__('cur')));
-		$sql = "SELECT description, id , avg_time, cur_time FROM host WHERE host.id IN ($sql_allowed_hosts).") ORDER BY avg_time DESC LIMIT 5";
+		$sql = "SELECT description, id , avg_time, cur_time FROM host WHERE host.id IN ($sql_allowed_hosts) ORDER BY avg_time DESC LIMIT 5";
 		$sql_worst_host = db_fetch_assoc_prepared($sql,$allowed_hosts);
 		foreach($sql_worst_host as $host) {
 			form_alternate_row($count,true);
