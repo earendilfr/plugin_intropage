@@ -27,10 +27,10 @@ function get_tholds() {
 		elseif ($t_disa > 0) { $result['alarm'] = "yellow"; }
 		
 		if (db_fetch_cell("SELECT COUNT(*) FROM user_auth_realm WHERE user_id = ".$_SESSION["sess_user_id"]." AND realm_id IN (SELECT id + 100 FROM plugin_realms WHERE file LIKE '%thold_graph.php%')")) {
-			$result['data'] = "<a href=\"" . htmlspecialchars($config['url_path']) . "plugins/thold/thold_graph.php?tab=thold&amp;triggered=-1\">All: $t_all</a> | \n";
-			$result['data'] .= "<a href=\"" . htmlspecialchars($config['url_path']) . "plugins/thold/thold_graph.php?tab=thold&amp;triggered=1\">Breached: $t_brea</a> | \n";
-			$result['data'] .= "<a href=\"" . htmlspecialchars($config['url_path']) . "plugins/thold/thold_graph.php?tab=thold&amp;triggered=3\">Trigged: $t_trig</a> | \n";
-			$result['data'] .= "<a href=\"" . htmlspecialchars($config['url_path']) . "plugins/thold/thold_graph.php?tab=thold&amp;triggered=0\">Disabled: $t_disa</a> | \n";
+			$result['data']  = "<a href=\"" . htmlspecialchars($config['url_path']) . "plugins/thold/thold_graph.php?action=thold&amp;status=-1&amp;data_template_id=-1&amp;host_id=-1&amp;site_id=-1&amp;rows=-1&amp;filter=\">All: $t_all</a> | \n";
+			$result['data'] .= "<a href=\"" . htmlspecialchars($config['url_path']) . "plugins/thold/thold_graph.php?action=thold&amp;status=1&amp;data_template_id=-1&amp;host_id=-1&amp;site_id=-1&amp;rows=-1&amp;filter=\">Breached: $t_brea</a> | \n";
+			$result['data'] .= "<a href=\"" . htmlspecialchars($config['url_path']) . "plugins/thold/thold_graph.php?action=thold&amp;status=3&amp;data_template_id=-1&amp;host_id=-1&amp;site_id=-1&amp;rows=-1&amp;filter=\">Trigged: $t_trig</a> | \n";
+			$result['data'] .= "<a href=\"" . htmlspecialchars($config['url_path']) . "plugins/thold/thold_graph.php?action=thold&amp;status=0&amp;data_template_id=-1&amp;host_id=-1&amp;site_id=-1&amp;rows=-1&amp;filter=\">Disabled: $t_disa</a> | \n";
 		} else {
 			$result['data'] = "All: $t_all | \n";
 			$result['data'] .= "Breached: $t_brea | \n";
